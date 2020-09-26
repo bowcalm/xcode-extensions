@@ -5,10 +5,20 @@ import AVFoundation
 extension AVAudioPlayerNode {
     
     func scheduleSegment(file: AVAudioFile, startingFrame: AVAudioFramePosition, frameCount: AVAudioFrameCount, at time: AVAudioTime? = nil, completionHandler: (() -> ())? = nil) {
-        print(#function, "startingFrame: \(startingFrame)", "frameCount: \(frameCount)")
-        guard 0 ... file.length ~= startingFrame, 1 ... UInt32(file.length) ~= frameCount else {
-            print("AVAudioPlayerNode.scheduleSegment: incorrect argment")
-            return
+        var startingFrame = startingFrame
+        if !(0 ... file.length ~= startingFrame) {
+            print("AVAudioPlayerNode.scheduleSegment: startingFrame wrong -> fix by mod file.length")
+            while startingFrame < 0 {
+                startingFrame += file.length
+            }
+            startingFrame %= file.length
+        }
+        
+        var frameCount = frameCount
+        if !(1 ... UInt32(file.length) ~= frameCount) {
+            print("AVAudioPlayerNode.scheduleSegment: frameCount wrong -> fix to closest correct value")
+            
+            frameCount = frameCount <= 0 ? 1 : UInt32(file.length)
         }
         
         self.scheduleSegment(
